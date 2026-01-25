@@ -73,7 +73,11 @@ class HeartDiseasePredictor:
             
         with torch.no_grad():
             logits = self.model(X_tensor)
-            prob = torch.sigmoid(logits).item()
+            # Temperature scaling to soften predictions
+            # The model is currently very confident (logits ~ +/- 15), leading to 0% or 100%.
+            # Dividing by temperature spreads the sigmoid curve.
+            temperature = 5.0 
+            prob = torch.sigmoid(logits / temperature).item()
             
         return prob
 
