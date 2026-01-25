@@ -7,126 +7,73 @@ interface Props {
   isLoading: boolean;
 }
 
+const BinarySelect = ({ label, register, name }: { label: string, register: any, name: keyof HeartDiseaseInput }) => (
+    <div>
+        <label className="block text-sm font-medium text-slate-700 mb-1">{label}</label>
+        <select {...register(name, { valueAsNumber: true })} className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none">
+            <option value={0}>No</option>
+            <option value={1}>Yes</option>
+        </select>
+    </div>
+);
+
 const PredictionForm: React.FC<Props> = ({ onSubmit, isLoading }) => {
-  const { register, handleSubmit, formState: { errors } } = useForm<HeartDiseaseInput>({
+  const { register, handleSubmit } = useForm<HeartDiseaseInput>({
     defaultValues: {
-      age: 45, sex: 1, cp: 0, trestbps: 120, chol: 200, fbs: 0, 
-      restecg: 0, thalach: 150, exang: 0, oldpeak: 0.0, slope: 1, ca: 0, thal: 2
+      Age: 45, Gender: 1, Chest_Pain: 0, Shortness_of_Breath: 0, Fatigue: 0,
+      Palpitations: 0, Dizziness: 0, Swelling: 0, Pain_Arms_Jaw_Back: 0,
+      Cold_Sweats_Nausea: 0, High_BP: 0, High_Cholesterol: 0, Diabetes: 0,
+      Smoking: 0, Obesity: 0, Sedentary_Lifestyle: 0, Family_History: 0,
+      Chronic_Stress: 0
     }
   });
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-      {/* Section 1: Personal Info */}
+      {/* Section 1: Demographics & Lifestyle */}
       <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
         <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center">
             <span className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mr-2 text-sm">1</span>
-            Patient Demographics
+            Demographics & Lifestyle
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Age</label>
-                <input {...register("age", { required: true, min: 1, max: 120 })} type="number" className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" />
+                <input {...register("Age", { required: true, min: 1, max: 120 })} type="number" className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none" />
             </div>
             <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Sex</label>
-                <select {...register("sex", { valueAsNumber: true })} className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none">
+                <label className="block text-sm font-medium text-slate-700 mb-1">Gender</label>
+                <select {...register("Gender", { valueAsNumber: true })} className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none">
                     <option value={1}>Male</option>
                     <option value={0}>Female</option>
                 </select>
             </div>
+            <BinarySelect label="Family History" register={register} name="Family_History" />
+            <BinarySelect label="Smoking" register={register} name="Smoking" />
+            <BinarySelect label="Obesity" register={register} name="Obesity" />
+            <BinarySelect label="Sedentary Lifestyle" register={register} name="Sedentary_Lifestyle" />
+            <BinarySelect label="High Blood Pressure" register={register} name="High_BP" />
+            <BinarySelect label="High Cholesterol" register={register} name="High_Cholesterol" />
+            <BinarySelect label="Diabetes" register={register} name="Diabetes" />
         </div>
       </div>
 
-      {/* Section 2: Clinical Data */}
+      {/* Section 2: Symptoms */}
       <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
         <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center">
             <span className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mr-2 text-sm">2</span>
-            Clinical Measurements
+            Symptoms & Conditions
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Resting BP (mm Hg)</label>
-                <input {...register("trestbps", { valueAsNumber: true })} type="number" className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none" />
-            </div>
-            <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Cholesterol (mg/dl)</label>
-                <input {...register("chol", { valueAsNumber: true })} type="number" className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none" />
-            </div>
-            <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Max Heart Rate</label>
-                <input {...register("thalach", { valueAsNumber: true })} type="number" className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none" />
-            </div>
-             <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Chest Pain Type</label>
-                 <select {...register("cp", { valueAsNumber: true })} className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none">
-                    <option value={0}>Typical Angina</option>
-                    <option value={1}>Atypical Angina</option>
-                    <option value={2}>Non-anginal Pain</option>
-                    <option value={3}>Asymptomatic</option>
-                </select>
-            </div>
-            <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Fasting Blood Sugar ({'>'}120)</label>
-                 <select {...register("fbs", { valueAsNumber: true })} className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none">
-                    <option value={0}>False</option>
-                    <option value={1}>True</option>
-                </select>
-            </div>
-             <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Rest ECG</label>
-                 <select {...register("restecg", { valueAsNumber: true })} className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none">
-                    <option value={0}>Normal</option>
-                    <option value={1}>ST-T Wave Abnormality</option>
-                    <option value={2}>Left Ventricular Hypertrophy</option>
-                </select>
-            </div>
-        </div>
-      </div>
-
-       {/* Section 3: Advanced Cardiac */}
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-        <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center">
-            <span className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mr-2 text-sm">3</span>
-            Stress Test & Angiography
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Exercise Induced Angina</label>
-                 <select {...register("exang", { valueAsNumber: true })} className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none">
-                    <option value={0}>No</option>
-                    <option value={1}>Yes</option>
-                </select>
-            </div>
-            <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">ST Depression (Oldpeak)</label>
-                <input {...register("oldpeak", { valueAsNumber: true })} type="number" step="0.1" className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none" />
-            </div>
-            <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Slope of Peak Exercise ST</label>
-                 <select {...register("slope", { valueAsNumber: true })} className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none">
-                    <option value={0}>Upsloping</option>
-                    <option value={1}>Flat</option>
-                    <option value={2}>Downsloping</option>
-                </select>
-            </div>
-             <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Major Vessels (CA)</label>
-                 <select {...register("ca", { valueAsNumber: true })} className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none">
-                    <option value={0}>0</option>
-                    <option value={1}>1</option>
-                    <option value={2}>2</option>
-                    <option value={3}>3</option>
-                </select>
-            </div>
-            <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Thalassemia</label>
-                 <select {...register("thal", { valueAsNumber: true })} className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none">
-                    <option value={1}>Normal</option>
-                    <option value={2}>Fixed Defect</option>
-                    <option value={3}>Reversible Defect</option>
-                </select>
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <BinarySelect label="Chest Pain" register={register} name="Chest_Pain" />
+            <BinarySelect label="Shortness of Breath" register={register} name="Shortness_of_Breath" />
+            <BinarySelect label="Fatigue" register={register} name="Fatigue" />
+            <BinarySelect label="Palpitations" register={register} name="Palpitations" />
+            <BinarySelect label="Dizziness" register={register} name="Dizziness" />
+            <BinarySelect label="Swelling / Edema" register={register} name="Swelling" />
+            <BinarySelect label="Pain in Arms/Jaw/Back" register={register} name="Pain_Arms_Jaw_Back" />
+            <BinarySelect label="Cold Sweats / Nausea" register={register} name="Cold_Sweats_Nausea" />
+            <BinarySelect label="Chronic Stress" register={register} name="Chronic_Stress" />
         </div>
       </div>
 

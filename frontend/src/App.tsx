@@ -40,7 +40,7 @@ function App() {
                 Heart Disease Risk Assessment
             </h1>
             <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-                Advanced machine learning analysis using 13 clinical markers to predict cardiac health risks with high precision.
+                Advanced machine learning analysis using 18 clinical markers to predict cardiac health risks with high precision.
             </p>
         </div>
 

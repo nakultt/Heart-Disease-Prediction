@@ -3,19 +3,24 @@ import axios from 'axios';
 const API_URL = 'http://localhost:8000/api/v1';
 
 export interface HeartDiseaseInput {
-  age: number;
-  sex: number;
-  cp: number;
-  trestbps: number;
-  chol: number;
-  fbs: number;
-  restecg: number;
-  thalach: number;
-  exang: number;
-  oldpeak: number;
-  slope: number;
-  ca: number;
-  thal: number;
+  Chest_Pain: number;
+  Shortness_of_Breath: number;
+  Fatigue: number;
+  Palpitations: number;
+  Dizziness: number;
+  Swelling: number;
+  Pain_Arms_Jaw_Back: number;
+  Cold_Sweats_Nausea: number;
+  High_BP: number;
+  High_Cholesterol: number;
+  Diabetes: number;
+  Smoking: number;
+  Obesity: number;
+  Sedentary_Lifestyle: number;
+  Family_History: number;
+  Chronic_Stress: number;
+  Gender: number;
+  Age: number;
 }
 
 export interface PredictionResponse {

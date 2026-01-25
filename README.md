@@ -1,6 +1,8 @@
 # Heart Disease Prediction System (Enterprise Edition)
 
 A full-stack machine learning application for predicting heart disease risk using Deep Learning (PyTorch), FastAPI, and React.
+> **Note**: This project has been updated to use the DataV2 dataset (binary risk factors).
+
 
 ## 🚀 Quick Start
 

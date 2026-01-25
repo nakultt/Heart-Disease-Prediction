@@ -1,36 +1,46 @@
 from pydantic import BaseModel, Field, ConfigDict
 
 class HeartDiseaseInput(BaseModel):
-    age: int = Field(..., example=63, description="Age in years")
-    sex: int = Field(..., example=1, description="1 = male; 0 = female")
-    cp: int = Field(..., example=3, description="Chest pain type (0-3)")
-    trestbps: int = Field(..., example=145, description="Resting blood pressure (mm Hg)")
-    chol: int = Field(..., example=233, description="Serum cholestoral in mg/dl")
-    fbs: int = Field(..., example=1, description="Fasting blood sugar > 120 mg/dl (1 = true; 0 = false)")
-    restecg: int = Field(..., example=0, description="Resting electrocardiographic results (0-2)")
-    thalach: int = Field(..., example=150, description="Maximum heart rate achieved")
-    exang: int = Field(..., example=0, description="Exercise induced angina (1 = yes; 0 = no)")
-    oldpeak: float = Field(..., example=2.3, description="ST depression induced by exercise relative to rest")
-    slope: int = Field(..., example=0, description="Slope of the peak exercise ST segment (0-2)")
-    ca: int = Field(..., example=0, description="Number of major vessels (0-3) colored by flourosopy")
-    thal: int = Field(..., example=1, description="Thal (1 = normal; 2 = fixed defect; 3 = reversable defect)")
+    Chest_Pain: int = Field(..., description="1 = Yes, 0 = No")
+    Shortness_of_Breath: int = Field(..., description="1 = Yes, 0 = No")
+    Fatigue: int = Field(..., description="1 = Yes, 0 = No")
+    Palpitations: int = Field(..., description="1 = Yes, 0 = No")
+    Dizziness: int = Field(..., description="1 = Yes, 0 = No")
+    Swelling: int = Field(..., description="1 = Yes, 0 = No")
+    Pain_Arms_Jaw_Back: int = Field(..., description="1 = Yes, 0 = No")
+    Cold_Sweats_Nausea: int = Field(..., description="1 = Yes, 0 = No")
+    High_BP: int = Field(..., description="1 = Yes, 0 = No")
+    High_Cholesterol: int = Field(..., description="1 = Yes, 0 = No")
+    Diabetes: int = Field(..., description="1 = Yes, 0 = No")
+    Smoking: int = Field(..., description="1 = Yes, 0 = No")
+    Obesity: int = Field(..., description="1 = Yes, 0 = No")
+    Sedentary_Lifestyle: int = Field(..., description="1 = Yes, 0 = No")
+    Family_History: int = Field(..., description="1 = Yes, 0 = No")
+    Chronic_Stress: int = Field(..., description="1 = Yes, 0 = No")
+    Gender: int = Field(..., description="1 = Male, 0 = Female")
+    Age: int = Field(..., description="Age in years")
 
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
-                "age": 63,
-                "sex": 1,
-                "cp": 3,
-                "trestbps": 145,
-                "chol": 233,
-                "fbs": 1,
-                "restecg": 0,
-                "thalach": 150,
-                "exang": 0,
-                "oldpeak": 2.3,
-                "slope": 0,
-                "ca": 0,
-                "thal": 1
+                "Chest_Pain": 1,
+                "Shortness_of_Breath": 0,
+                "Fatigue": 1,
+                "Palpitations": 0,
+                "Dizziness": 0,
+                "Swelling": 0,
+                "Pain_Arms_Jaw_Back": 1,
+                "Cold_Sweats_Nausea": 0,
+                "High_BP": 1,
+                "High_Cholesterol": 0,
+                "Diabetes": 1,
+                "Smoking": 0,
+                "Obesity": 1,
+                "Sedentary_Lifestyle": 1,
+                "Family_History": 1,
+                "Chronic_Stress": 0,
+                "Gender": 1,
+                "Age": 55
             }
         }
     )

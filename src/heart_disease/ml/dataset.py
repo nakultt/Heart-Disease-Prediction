@@ -27,9 +27,15 @@ class HeartDiseaseDataset(Dataset):
         df = pd.read_csv(csv_path)
         
         # Define Features
-        self.numeric_features = ["age", "trestbps", "chol", "thalach", "oldpeak"]
-        self.categorical_features = ["sex", "cp", "fbs", "restecg", "exang", "slope", "ca", "thal"]
-        self.target_column = "target"
+        # Define Features
+        self.numeric_features = ["Age"]
+        self.categorical_features = [
+            "Chest_Pain", "Shortness_of_Breath", "Fatigue", "Palpitations", 
+            "Dizziness", "Swelling", "Pain_Arms_Jaw_Back", "Cold_Sweats_Nausea", 
+            "High_BP", "High_Cholesterol", "Diabetes", "Smoking", "Obesity", 
+            "Sedentary_Lifestyle", "Family_History", "Chronic_Stress", "Gender"
+        ]
+        self.target_column = "Heart_Risk"
         
         # Split Data
         train_df = df.sample(frac=split_ratio, random_state=random_seed)
@@ -96,9 +102,14 @@ def load_data(csv_path: str, test_size: float = 0.2, random_state: int = 42) -> 
     """
     df = pd.read_csv(csv_path)
     
-    numeric_features = ["age", "trestbps", "chol", "thalach", "oldpeak"]
-    categorical_features = ["sex", "cp", "fbs", "restecg", "exang", "slope", "ca", "thal"]
-    target_column = "target"
+    numeric_features = ["Age"]
+    categorical_features = [
+        "Chest_Pain", "Shortness_of_Breath", "Fatigue", "Palpitations", 
+        "Dizziness", "Swelling", "Pain_Arms_Jaw_Back", "Cold_Sweats_Nausea", 
+        "High_BP", "High_Cholesterol", "Diabetes", "Smoking", "Obesity", 
+        "Sedentary_Lifestyle", "Family_History", "Chronic_Stress", "Gender"
+    ]
+    target_column = "Heart_Risk"
     
     # Validation split
     train_df = df.sample(frac=1-test_size, random_state=random_state)
