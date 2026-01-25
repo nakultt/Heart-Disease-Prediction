@@ -1,0 +1,40 @@
+[tool.poetry]
+name = "heart-disease-prediction"
+version = "0.1.0"
+description = "Heart Disease Prediction System"
+readme = "README.md"
+packages = [{include = "heart_disease", from = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.14" 
+torch = "^2.10.0"
+torchvision = "^0.20.0"
+torchaudio = "^2.10.0"
+fastapi = "^0.126.0"
+uvicorn = "^0.34.0"
+mlflow = "^2.25.0"
+pandas = "^3.0.0"
+scikit-learn = "^1.7.0"
+pydantic = "^2.12.0"
+pydantic-settings = "^2.12.0"
+numpy = "^2.2.0"
+python-multipart = "^0.0.20"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.4.0"
+ruff = "^0.9.0"
+httpx = "^0.28.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 88
+target-version = "py314"  
+lint.select = ["E", "F", "I", "UP"] 
+lint.ignore = []
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"

@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.env
+.venv/
+dist/
+*.egg-info/
+mlruns/
+data/
+!data/heart.csv
+frontend/node_modules/
+frontend/dist/
+.DS_Store
