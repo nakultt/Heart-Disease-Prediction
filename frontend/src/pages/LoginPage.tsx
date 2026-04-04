@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { loginRequest } from '../services/api';
+import { getApiErrorMessage, loginRequest } from '../services/api';
 
 /**
  * Collect username/password and exchange them for a JWT from POST /auth/login.
@@ -30,11 +30,7 @@ const LoginPage: React.FC = () => {
       login(data.access_token);
       navigate(from, { replace: true });
     } catch (err: unknown) {
-      const message =
-        err && typeof err === 'object' && 'response' in err
-          ? (err as { response?: { data?: { detail?: string } } }).response?.data?.detail
-          : undefined;
-      setError(typeof message === 'string' ? message : 'Login failed. Check your credentials.');
+      setError(getApiErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -46,8 +42,8 @@ const LoginPage: React.FC = () => {
         <h1 className="text-2xl font-bold text-slate-900 mb-1">Sign in</h1>
         <p className="text-slate-600 text-sm mb-2">Use your account to access the risk assessment tool.</p>
         <p className="text-slate-500 text-xs mb-6 leading-relaxed">
-          If you restarted the Python server, previous sign-ups are gone (users are kept in memory only).
-          Register again, or use the default demo account: <strong>demo</strong> / <strong>demo123</strong>.
+          Accounts are stored in MongoDB. If <strong>SEED_DEMO_USER</strong> is enabled on the server, you can
+          use <strong>demo</strong> / <strong>demo123</strong>. Otherwise register a new account.
         </p>
 
         {error && (

@@ -1,25 +1,26 @@
 """
 FastAPI dependencies: extract the current user from a Bearer JWT.
 
-Used to protect routes—only requests with a valid token can proceed.
+User must still exist in MongoDB.
 """
+
+from typing import Any
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError
 
 from src.heart_disease.auth import jwt_handler
-from src.heart_disease.auth import users_store
+from src.heart_disease.db import users_repo
 
-# Tells FastAPI to read Authorization: Bearer <token>
 security = HTTPBearer()
 
 
-def get_current_user(
+def get_current_user_record(
     credentials: HTTPAuthorizationCredentials = Depends(security),
-) -> str:
+) -> dict[str, Any]:
     """
-    Validate the JWT and return the username (subject).
+    Validate the JWT and return the user document from MongoDB.
 
     Raises 401 if the token is missing, invalid, or the user no longer exists.
     """
@@ -37,8 +38,15 @@ def get_current_user(
     except JWTError:
         raise credentials_exception
 
-    user = users_store.get_user(username)
+    user = users_repo.find_user_by_username(username)
     if user is None:
         raise credentials_exception
 
-    return user["username"]
+    return user
+
+
+def get_current_user(
+    user: dict[str, Any] = Depends(get_current_user_record),
+) -> str:
+    """Username for endpoints that only need the subject string (single DB lookup per request)."""
+    return str(user["username"])

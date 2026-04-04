@@ -3,12 +3,13 @@ import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
-import PredictionPage from './pages/PredictionPage';
+import HomePage from './pages/HomePage';
+import ClinicalAssessmentPage from './pages/ClinicalAssessmentPage';
+import DemographicsPage from './pages/DemographicsPage';
+import StressPage from './pages/StressPage';
+import HistoryPage from './pages/HistoryPage';
+import SettingsPage from './pages/SettingsPage';
 
-/**
- * Public routes: /login, /register
- * Protected: / (heart disease form)
- */
 function App() {
   return (
     <BrowserRouter>
@@ -20,7 +21,47 @@ function App() {
             path="/"
             element={
               <ProtectedRoute>
-                <PredictionPage />
+                <HomePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/clinical"
+            element={
+              <ProtectedRoute>
+                <ClinicalAssessmentPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/demographics"
+            element={
+              <ProtectedRoute>
+                <DemographicsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/stress"
+            element={
+              <ProtectedRoute>
+                <StressPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/history"
+            element={
+              <ProtectedRoute>
+                <HistoryPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <SettingsPage />
               </ProtectedRoute>
             }
           />

@@ -1,6 +1,9 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+
+const navClass = ({ isActive }: { isActive: boolean }) =>
+  `text-sm px-2 py-1 rounded ${isActive ? 'bg-slate-800 text-white' : 'text-slate-300 hover:text-white'}`;
 
 const Header: React.FC = () => {
   const { isAuthenticated, logout } = useAuth();
@@ -13,7 +16,7 @@ const Header: React.FC = () => {
 
   return (
     <header className="bg-slate-900 text-white shadow-lg">
-      <div className="container mx-auto px-6 py-4 flex justify-between items-center">
+      <div className="container mx-auto px-4 py-4 flex flex-col gap-3 md:flex-row md:justify-between md:items-center">
         <div className="flex items-center space-x-3">
           <div className="bg-red-500 p-2 rounded-full">
             <svg
@@ -35,18 +38,37 @@ const Header: React.FC = () => {
             CardioGuard AI
           </Link>
         </div>
-        <nav className="flex items-center gap-4 text-sm font-medium text-slate-300">
-          <span className="hidden sm:inline">Medical Assessment System</span>
-          {isAuthenticated && (
+        {isAuthenticated ? (
+          <nav className="flex flex-wrap items-center gap-1 md:gap-2">
+            <NavLink to="/" end className={navClass}>
+              Home
+            </NavLink>
+            <NavLink to="/clinical" className={navClass}>
+              Clinical
+            </NavLink>
+            <NavLink to="/demographics" className={navClass}>
+              Demographics
+            </NavLink>
+            <NavLink to="/stress" className={navClass}>
+              Stress
+            </NavLink>
+            <NavLink to="/history" className={navClass}>
+              History
+            </NavLink>
+            <NavLink to="/settings" className={navClass}>
+              Settings
+            </NavLink>
             <button
               type="button"
               onClick={handleLogout}
-              className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white transition"
+              className="text-sm px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white ml-1"
             >
               Log out
             </button>
-          )}
-        </nav>
+          </nav>
+        ) : (
+          <span className="text-sm text-slate-400">Sign in to continue</span>
+        )}
       </div>
     </header>
   );

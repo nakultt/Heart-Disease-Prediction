@@ -16,6 +16,8 @@ export default defineConfig({
   // Fixes 404s when requests accidentally hit :5173 instead of :8000, and avoids CORS issues in dev.
   server: {
     proxy: {
+      // Use localhost so it matches how many users start uvicorn (avoids 127.0.0.1 vs localhost mismatches).
+      // IPv4 avoids Windows resolving "localhost" to ::1 while uvicorn listens on 127.0.0.1
       '/auth': { target: 'http://127.0.0.1:8000', changeOrigin: true },
       '/api': { target: 'http://127.0.0.1:8000', changeOrigin: true },
     },

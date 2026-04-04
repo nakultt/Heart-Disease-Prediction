@@ -4,11 +4,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from src.heart_disease.core.config import get_settings
 from src.heart_disease.core.logging import setup_logging
-from src.heart_disease.api.v1.endpoints import prediction
+from src.heart_disease.api.v1.endpoints import history, prediction, profile
 from src.heart_disease.auth.routes import router as auth_router
 import logging
 
-# Setup Logging
 setup_logging()
 logger = logging.getLogger(__name__)
 
@@ -17,25 +16,36 @@ settings = get_settings()
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    """
-    Users live only in RAM: restarting uvicorn clears every account.
-    Optionally create a demo user so you can always sign in locally.
-    """
-    s = get_settings()
-    if s.SEED_DEMO_USER:
-        from src.heart_disease.auth import password as pwd_utils
-        from src.heart_disease.auth import users_store
+    """Connect MongoDB on startup; disconnect on shutdown. Optionally seed demo user."""
+    from pymongo.errors import DuplicateKeyError
 
-        if not users_store.username_exists(s.DEMO_USERNAME):
-            users_store.add_user(
-                s.DEMO_USERNAME,
-                pwd_utils.hash_password(s.DEMO_PASSWORD),
-            )
-            logger.info(
-                "Demo account ready: username=%r (disable with SEED_DEMO_USER=false in .env)",
-                s.DEMO_USERNAME,
-            )
-    yield
+    from src.heart_disease.auth import password as pwd_utils
+    from src.heart_disease.db import mongo, users_repo
+
+    mongo.connect()
+    try:
+        s = get_settings()
+        if s.SEED_DEMO_USER and not users_repo.username_taken(s.DEMO_USERNAME):
+            try:
+                users_repo.insert_user(
+                    username=s.DEMO_USERNAME,
+                    password_hash=pwd_utils.hash_password(s.DEMO_PASSWORD),
+                    age=40,
+                    gender="male",
+                    weight_kg=75.0,
+                    height_cm=175.0,
+                    smoking="never",
+                    stress="low",
+                )
+                logger.info(
+                    "Demo account created in MongoDB: %r (set SEED_DEMO_USER=false to disable)",
+                    s.DEMO_USERNAME,
+                )
+            except DuplicateKeyError:
+                logger.warning("Demo user already exists (duplicate key); continuing.")
+        yield
+    finally:
+        mongo.disconnect()
 
 
 app = FastAPI(
@@ -45,32 +55,28 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS config
-origins = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    "http://localhost:5174",
-    "http://127.0.0.1:5174",
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-]
-
+# Any localhost / 127.0.0.1 port (Vite may use 5173, 5174, …). Also allow direct LAN IP for dev.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?$|https?://192\.168\.\d+\.\d+(:\d+)?$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Routers
 app.include_router(auth_router, prefix="/auth", tags=["auth"])
 app.include_router(prediction.router, prefix=settings.API_PREFIX, tags=["prediction"])
+app.include_router(profile.router, prefix=settings.API_PREFIX, tags=["profile"])
+app.include_router(history.router, prefix=settings.API_PREFIX, tags=["history"])
+
 
 @app.get("/health")
 def health_check():
     return {"status": "ok", "app_name": settings.APP_NAME}
 
+
 if __name__ == "__main__":
     import uvicorn
+
+    # 0.0.0.0 accepts connections via 127.0.0.1 and localhost (works with Vite proxy).
     uvicorn.run("src.heart_disease.main:app", host="0.0.0.0", port=8000, reload=True)
