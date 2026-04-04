@@ -1,5 +1,6 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from src.heart_disease.api.v1.schemas import HeartDiseaseInput, PredictionResponse
+from src.heart_disease.auth.dependencies import get_current_user
 from src.heart_disease.ml.predict import get_predictor, HeartDiseasePredictor
 from src.heart_disease.core.config import get_settings
 import logging
@@ -28,9 +29,11 @@ def get_model_predictor():
 @router.post("/predict", response_model=PredictionResponse)
 async def predict_heart_disease(
     input_data: HeartDiseaseInput,
-    predictor: HeartDiseasePredictor = Depends(get_model_predictor)
+    predictor: HeartDiseasePredictor = Depends(get_model_predictor),
+    current_user: str = Depends(get_current_user),
 ):
     try:
+        logger.debug("Prediction request for authenticated user: %s", current_user)
         data_dict = input_data.model_dump()
         prob = predictor.predict(data_dict)
         

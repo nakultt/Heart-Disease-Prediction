@@ -8,7 +8,18 @@ class Settings(BaseSettings):
     
     # ML Settings
     MODEL_DIR: str = "."
-    
+
+    # JWT auth (override JWT_SECRET_KEY in production via .env)
+    JWT_SECRET_KEY: str = "dev-only-change-me-use-openssl-rand-hex-32"
+    JWT_ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24 hours for demos
+
+    # Optional demo account (in-memory resets when the server restarts anyway).
+    # Set SEED_DEMO_USER=false in .env for production-like runs.
+    SEED_DEMO_USER: bool = True
+    DEMO_USERNAME: str = "demo"
+    DEMO_PASSWORD: str = "demo123"
+
     class Config:
         env_file = ".env"
 

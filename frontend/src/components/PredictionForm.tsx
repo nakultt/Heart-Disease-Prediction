@@ -8,7 +8,7 @@ interface Props {
 }
 
 const PredictionForm: React.FC<Props> = ({ onSubmit, isLoading }) => {
-  const { register, handleSubmit, formState: { errors } } = useForm<HeartDiseaseInput>({
+  const { register, handleSubmit } = useForm<HeartDiseaseInput>({
     defaultValues: {
       age: 45, sex: 1, cp: 0, trestbps: 120, chol: 200, fbs: 0, 
       restecg: 0, thalach: 150, exang: 0, oldpeak: 0.0, slope: 1, ca: 0, thal: 2

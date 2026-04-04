@@ -11,7 +11,6 @@ const RiskResult: React.FC<Props> = ({ result, onReset }) => {
   const percentage = Math.round(result.probability * 100);
   
   // Dynamic colors based on risk
-  const colorBase = isHighRisk ? 'red' : 'emerald';
   const bgColor = isHighRisk ? 'bg-red-50' : 'bg-emerald-50';
   const textColor = isHighRisk ? 'text-red-800' : 'text-emerald-800';
   const borderColor = isHighRisk ? 'border-red-200' : 'border-emerald-200';
