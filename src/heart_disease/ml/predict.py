@@ -5,6 +5,7 @@ import numpy as np
 from pathlib import Path
 from typing import Dict, Union, Any
 
+from src.heart_disease.core.config import resolve_model_dir
 from src.heart_disease.ml.model import HeartDiseaseClassifier
 
 class HeartDiseasePredictor:
@@ -78,10 +79,11 @@ class HeartDiseasePredictor:
         return prob
 
 # Helper to easy load
-def get_predictor(model_dir: str = ".") -> HeartDiseasePredictor:
-    # This assumes artifacts are in the current dir or specific dir
-    preprocessor_path = Path(model_dir) / "preprocessor.joblib"
-    model_path = Path(model_dir) / "best_model.pth"
+def get_predictor() -> HeartDiseasePredictor:
+    """Load artifacts from repo-root–anchored path (see `resolve_model_dir`)."""
+    base = resolve_model_dir()
+    preprocessor_path = base / "preprocessor.joblib"
+    model_path = base / "best_model.pth"
     
     device = "cuda" if torch.cuda.is_available() else "cpu"
     predictor = HeartDiseasePredictor(str(model_path), str(preprocessor_path), device=device)
