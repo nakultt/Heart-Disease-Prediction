@@ -2,9 +2,6 @@ import axios, { isAxiosError } from 'axios';
 
 export const TOKEN_STORAGE_KEY = 'heart_disease_jwt';
 
-/**
- * Resolve API origin on each use so it stays correct if Vite switches ports (5173 → 5174).
- */
 export function resolveApiBase(): string {
   const fromEnv = import.meta.env.VITE_API_BASE_URL?.trim();
   if (fromEnv) {
@@ -45,29 +42,25 @@ apiClient.interceptors.response.use(
   }
 );
 
-/** Defaults match PredictionForm — used when a number input was cleared (NaN → JSON null). */
+/** Defaults for the PredictionForm — used as safety fallback. */
 const CLINICAL_DEFAULTS: ClinicalHeartInput = {
-  cp: 0,
-  trestbps: 120,
-  chol: 200,
-  fbs: 0,
-  restecg: 0,
-  thalach: 150,
-  exang: 0,
-  oldpeak: 0,
-  slope: 1,
-  ca: 0,
-  thal: 2,
+  Chest_Pain: 0,
+  Shortness_of_Breath: 0,
+  Fatigue: 0,
+  Palpitations: 0,
+  Dizziness: 0,
+  Swelling: 0,
+  Pain_Arms_Jaw_Back: 0,
+  Cold_Sweats_Nausea: 0,
+  High_BP: 0,
+  High_Cholesterol: 0,
+  Diabetes: 0,
+  Smoking: 0,
+  Obesity: 0,
+  Sedentary_Lifestyle: 0,
+  Family_History: 0,
+  Chronic_Stress: 0,
 };
-
-function asInt(v: unknown, fallback: number): number {
-  if (typeof v === 'number' && Number.isFinite(v)) return Math.trunc(v);
-  if (typeof v === 'string' && v.trim() !== '') {
-    const n = parseInt(v, 10);
-    if (Number.isFinite(n)) return n;
-  }
-  return fallback;
-}
 
 function asFloat(v: unknown, fallback: number): number {
   if (typeof v === 'number' && Number.isFinite(v)) return v;
@@ -81,33 +74,43 @@ function asFloat(v: unknown, fallback: number): number {
 /** Coerce react-hook-form values so empty number fields never become null/NaN in JSON. */
 export function normalizeClinicalInput(data: Partial<ClinicalHeartInput>): ClinicalHeartInput {
   return {
-    cp: asInt(data.cp, CLINICAL_DEFAULTS.cp),
-    trestbps: asInt(data.trestbps, CLINICAL_DEFAULTS.trestbps),
-    chol: asInt(data.chol, CLINICAL_DEFAULTS.chol),
-    fbs: asInt(data.fbs, CLINICAL_DEFAULTS.fbs),
-    restecg: asInt(data.restecg, CLINICAL_DEFAULTS.restecg),
-    thalach: asInt(data.thalach, CLINICAL_DEFAULTS.thalach),
-    exang: asInt(data.exang, CLINICAL_DEFAULTS.exang),
-    oldpeak: asFloat(data.oldpeak, CLINICAL_DEFAULTS.oldpeak),
-    slope: asInt(data.slope, CLINICAL_DEFAULTS.slope),
-    ca: asInt(data.ca, CLINICAL_DEFAULTS.ca),
-    thal: asInt(data.thal, CLINICAL_DEFAULTS.thal),
+    Chest_Pain: asFloat(data.Chest_Pain, CLINICAL_DEFAULTS.Chest_Pain),
+    Shortness_of_Breath: asFloat(data.Shortness_of_Breath, CLINICAL_DEFAULTS.Shortness_of_Breath),
+    Fatigue: asFloat(data.Fatigue, CLINICAL_DEFAULTS.Fatigue),
+    Palpitations: asFloat(data.Palpitations, CLINICAL_DEFAULTS.Palpitations),
+    Dizziness: asFloat(data.Dizziness, CLINICAL_DEFAULTS.Dizziness),
+    Swelling: asFloat(data.Swelling, CLINICAL_DEFAULTS.Swelling),
+    Pain_Arms_Jaw_Back: asFloat(data.Pain_Arms_Jaw_Back, CLINICAL_DEFAULTS.Pain_Arms_Jaw_Back),
+    Cold_Sweats_Nausea: asFloat(data.Cold_Sweats_Nausea, CLINICAL_DEFAULTS.Cold_Sweats_Nausea),
+    High_BP: asFloat(data.High_BP, CLINICAL_DEFAULTS.High_BP),
+    High_Cholesterol: asFloat(data.High_Cholesterol, CLINICAL_DEFAULTS.High_Cholesterol),
+    Diabetes: asFloat(data.Diabetes, CLINICAL_DEFAULTS.Diabetes),
+    Smoking: asFloat(data.Smoking, CLINICAL_DEFAULTS.Smoking),
+    Obesity: asFloat(data.Obesity, CLINICAL_DEFAULTS.Obesity),
+    Sedentary_Lifestyle: asFloat(data.Sedentary_Lifestyle, CLINICAL_DEFAULTS.Sedentary_Lifestyle),
+    Family_History: asFloat(data.Family_History, CLINICAL_DEFAULTS.Family_History),
+    Chronic_Stress: asFloat(data.Chronic_Stress, CLINICAL_DEFAULTS.Chronic_Stress),
   };
 }
 
-/** Clinical fields only — age/sex are taken from the user profile on the server. */
+/** Clinical fields only — Age/Gender are taken from the user profile on the server. */
 export interface ClinicalHeartInput {
-  cp: number;
-  trestbps: number;
-  chol: number;
-  fbs: number;
-  restecg: number;
-  thalach: number;
-  exang: number;
-  oldpeak: number;
-  slope: number;
-  ca: number;
-  thal: number;
+  Chest_Pain: number;
+  Shortness_of_Breath: number;
+  Fatigue: number;
+  Palpitations: number;
+  Dizziness: number;
+  Swelling: number;
+  Pain_Arms_Jaw_Back: number;
+  Cold_Sweats_Nausea: number;
+  High_BP: number;
+  High_Cholesterol: number;
+  Diabetes: number;
+  Smoking: number;
+  Obesity: number;
+  Sedentary_Lifestyle: number;
+  Family_History: number;
+  Chronic_Stress: number;
 }
 
 export interface PredictionResponse {
@@ -202,7 +205,6 @@ export const fetchPredictionHistory = async (): Promise<PredictionHistoryItem[]>
   return response.data;
 };
 
-/** Human-readable message for axios / network failures (use in catch blocks). */
 export function getApiErrorMessage(err: unknown): string {
   if (isAxiosError(err)) {
     const d = err.response?.data as { detail?: unknown } | undefined;

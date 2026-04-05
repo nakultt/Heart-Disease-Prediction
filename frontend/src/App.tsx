@@ -4,9 +4,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import HomePage from './pages/HomePage';
-import ClinicalAssessmentPage from './pages/ClinicalAssessmentPage';
-import DemographicsPage from './pages/DemographicsPage';
-import StressPage from './pages/StressPage';
+import AssessmentDashboard from './pages/AssessmentDashboard';
 import HistoryPage from './pages/HistoryPage';
 import SettingsPage from './pages/SettingsPage';
 
@@ -26,26 +24,10 @@ function App() {
             }
           />
           <Route
-            path="/clinical"
+            path="/assessment"
             element={
               <ProtectedRoute>
-                <ClinicalAssessmentPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/demographics"
-            element={
-              <ProtectedRoute>
-                <DemographicsPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/stress"
-            element={
-              <ProtectedRoute>
-                <StressPage />
+                <AssessmentDashboard />
               </ProtectedRoute>
             }
           />

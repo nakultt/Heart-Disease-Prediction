@@ -3,35 +3,28 @@ import torch
 from torch.utils.data import Dataset
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
-from sklearn.pipeline import Pipeline
 import numpy as np
 import joblib
 from pathlib import Path
-from typing import Tuple, Optional
+from typing import Tuple
 
 class HeartDiseaseDataset(Dataset):
     def __init__(self, csv_path: str, mode: str = "train", split_ratio: float = 0.8, random_seed: int = 42):
-        """
-        Custom PyTorch Dataset for Heart Disease Data.
-        
-        Args:
-            csv_path: Path to the heart.csv file.
-            mode: 'train' or 'val'.
-            split_ratio: Ratio for training data.
-            random_seed: Seed for reproducibility.
-        """
         self.csv_path = csv_path
         self.mode = mode
         
-        # Load Data
         df = pd.read_csv(csv_path)
         
-        # Define Features
-        self.numeric_features = ["age", "trestbps", "chol", "thalach", "oldpeak"]
-        self.categorical_features = ["sex", "cp", "fbs", "restecg", "exang", "slope", "ca", "thal"]
-        self.target_column = "target"
+        # New Feature Maps Let's treat everything as numeric/passthrough or use standard scaling for Age, and pass categorical.
+        self.numeric_features = ["Age"]
+        self.categorical_features = [
+            "Chest_Pain", "Shortness_of_Breath", "Fatigue", "Palpitations", 
+            "Dizziness", "Swelling", "Pain_Arms_Jaw_Back", "Cold_Sweats_Nausea", 
+            "High_BP", "High_Cholesterol", "Diabetes", "Smoking", "Obesity", 
+            "Sedentary_Lifestyle", "Family_History", "Chronic_Stress", "Gender"
+        ]
+        self.target_column = "Heart_Risk"
         
-        # Split Data
         train_df = df.sample(frac=split_ratio, random_state=random_seed)
         val_df = df.drop(train_df.index)
         
@@ -40,19 +33,15 @@ class HeartDiseaseDataset(Dataset):
             self.fit_preprocessor(train_df)
         else:
             self.data = val_df
-            # For validation, we load the preprocessor fitted on training data
-            # IN REAL PROD: This should be loaded from a file. 
-            # HERE: We will refit for simplicity of independent instantiation, 
-            # BUT ideally, the preprocessor should be passed in.
-            # To fix this properly for this demo: Trainer should handle preprocessing logic and pass tensors/arrays.
-            # However, to keep it self-contained:
-            pass # Preprocessing handled externally or via shared state in a real pipeline
+            pass 
             
     def fit_preprocessor(self, df: pd.DataFrame):
         self.preprocessor = ColumnTransformer(
             transformers=[
                 ("num", StandardScaler(), self.numeric_features),
-                ("cat", OneHotEncoder(handle_unknown="ignore"), self.categorical_features),
+                # Since they are 0.0 or 1.0, they can be scaled or passed through,
+                # Using 'passthrough' for binary features is standard.
+                ("cat", "passthrough", self.categorical_features),
             ]
         )
         self.preprocessor.fit(df.drop(columns=[self.target_column]))
@@ -71,15 +60,9 @@ class HeartDiseaseDataset(Dataset):
         return len(self.data)
 
     def __getitem__(self, idx):
-        # Note: This is inefficient for real-time training (transforming per item). 
-        # Better to transform entire dataset in __init__.
-        # For small datasets like this (300 rows), we can pre-process in __init__.
         pass
 
 class ProcessedHeartDataset(Dataset):
-    """
-    More efficient version that processes everything upfront.
-    """
     def __init__(self, X: np.ndarray, y: np.ndarray):
         self.X = torch.tensor(X, dtype=torch.float32)
         self.y = torch.tensor(y, dtype=torch.float32).unsqueeze(1)
@@ -91,14 +74,16 @@ class ProcessedHeartDataset(Dataset):
         return self.X[idx], self.y[idx]
 
 def load_data(csv_path: str, test_size: float = 0.2, random_state: int = 42) -> Tuple[Dataset, Dataset, ColumnTransformer]:
-    """
-    Loads data, fits preprocessor on train, and returns Train/Val Datasets.
-    """
     df = pd.read_csv(csv_path)
     
-    numeric_features = ["age", "trestbps", "chol", "thalach", "oldpeak"]
-    categorical_features = ["sex", "cp", "fbs", "restecg", "exang", "slope", "ca", "thal"]
-    target_column = "target"
+    numeric_features = ["Age"]
+    categorical_features = [
+        "Chest_Pain", "Shortness_of_Breath", "Fatigue", "Palpitations", 
+        "Dizziness", "Swelling", "Pain_Arms_Jaw_Back", "Cold_Sweats_Nausea", 
+        "High_BP", "High_Cholesterol", "Diabetes", "Smoking", "Obesity", 
+        "Sedentary_Lifestyle", "Family_History", "Chronic_Stress", "Gender"
+    ]
+    target_column = "Heart_Risk"
     
     # Validation split
     train_df = df.sample(frac=1-test_size, random_state=random_state)
@@ -108,7 +93,7 @@ def load_data(csv_path: str, test_size: float = 0.2, random_state: int = 42) -> 
     preprocessor = ColumnTransformer(
         transformers=[
             ("num", StandardScaler(), numeric_features),
-            ("cat", OneHotEncoder(handle_unknown="ignore"), categorical_features),
+            ("cat", "passthrough", categorical_features),
         ]
     )
     

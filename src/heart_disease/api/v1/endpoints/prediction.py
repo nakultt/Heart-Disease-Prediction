@@ -43,22 +43,36 @@ async def predict_heart_disease(
     current_user = str(user["username"])
     try:
         clinical_dict = input_data.model_dump()
-        # MongoDB may return BSON numeric types; sklearn / pandas need plain Python numbers.
+        
+        # Determine Gender numeric representation (Dataset Gender: 0.0 or 1.0)
+        # We can map it if 1=male, 0=female
+        gender_str = str(user["gender"]).lower()
+        if gender_str == "male":
+            gender_val = 1.0
+        else:
+            gender_val = 0.0
+            
         full_dict = {
-            "age": int(user["age"]),
-            "sex": int(users_repo.gender_to_sex(str(user["gender"]))),
-            "cp": int(clinical_dict["cp"]),
-            "trestbps": int(clinical_dict["trestbps"]),
-            "chol": int(clinical_dict["chol"]),
-            "fbs": int(clinical_dict["fbs"]),
-            "restecg": int(clinical_dict["restecg"]),
-            "thalach": int(clinical_dict["thalach"]),
-            "exang": int(clinical_dict["exang"]),
-            "oldpeak": float(clinical_dict["oldpeak"]),
-            "slope": int(clinical_dict["slope"]),
-            "ca": int(clinical_dict["ca"]),
-            "thal": int(clinical_dict["thal"]),
+            "Chest_Pain": float(clinical_dict["Chest_Pain"]),
+            "Shortness_of_Breath": float(clinical_dict["Shortness_of_Breath"]),
+            "Fatigue": float(clinical_dict["Fatigue"]),
+            "Palpitations": float(clinical_dict["Palpitations"]),
+            "Dizziness": float(clinical_dict["Dizziness"]),
+            "Swelling": float(clinical_dict["Swelling"]),
+            "Pain_Arms_Jaw_Back": float(clinical_dict["Pain_Arms_Jaw_Back"]),
+            "Cold_Sweats_Nausea": float(clinical_dict["Cold_Sweats_Nausea"]),
+            "High_BP": float(clinical_dict["High_BP"]),
+            "High_Cholesterol": float(clinical_dict["High_Cholesterol"]),
+            "Diabetes": float(clinical_dict["Diabetes"]),
+            "Smoking": float(clinical_dict["Smoking"]),
+            "Obesity": float(clinical_dict["Obesity"]),
+            "Sedentary_Lifestyle": float(clinical_dict["Sedentary_Lifestyle"]),
+            "Family_History": float(clinical_dict["Family_History"]),
+            "Chronic_Stress": float(clinical_dict["Chronic_Stress"]),
+            "Gender": gender_val,
+            "Age": float(user["age"])
         }
+        
         heart_input = HeartDiseaseInput(**full_dict)
         data_dict = heart_input.model_dump()
 
