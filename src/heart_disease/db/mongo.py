@@ -11,6 +11,7 @@ from pymongo.database import Database
 from pymongo.errors import ConfigurationError, PyMongoError
 
 from src.heart_disease.core.config import get_settings
+from src.heart_disease.db.srv_dns import prefer_public_dns_for_srv
 
 _client: MongoClient | None = None
 
@@ -22,6 +23,7 @@ def connect() -> Database:
     if not settings.MONGODB_URL or not settings.MONGODB_URL.strip():
         raise RuntimeError("MONGODB_URL is not set. Add it to your .env file.")
     url = settings.MONGODB_URL.strip()
+    prefer_public_dns_for_srv(url)
     try:
         _client = MongoClient(url, serverSelectionTimeoutMS=10000)
         # Force connection attempt early
