@@ -12,6 +12,7 @@ setup_logging()
 logger = logging.getLogger(__name__)
 
 settings = get_settings()
+logger.info("Active ML Model Type: %s", settings.MODEL_TYPE.upper())
 
 
 @asynccontextmanager

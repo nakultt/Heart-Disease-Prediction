@@ -1,43 +1,41 @@
+"""
+Unified predictor factory.
+
+Reads ``MODEL_TYPE`` from the environment (via ``Settings``) and returns
+the appropriate predictor backend:
+
+* ``"pytorch"``           → PyTorch MLP  (``best_model.pth`` + ``preprocessor.joblib``)
+* ``"gradient_boosting"`` → sklearn GB   (``gb_model.joblib``  + ``gb_preprocessor.joblib``)
+
+Both backends expose the same ``predict(dict) -> float`` interface so the
+API layer is completely agnostic.
+"""
+
+import logging
+from typing import Union
+
 import torch
 import joblib
 import pandas as pd
 import numpy as np
 from pathlib import Path
-from typing import Dict, Union, Any
+from typing import Dict, Any
 
-from src.heart_disease.core.config import resolve_model_dir
+from src.heart_disease.core.config import get_settings, resolve_model_dir
 from src.heart_disease.ml.model import HeartDiseaseClassifier
+from src.heart_disease.ml.gb_predict import GBHeartDiseasePredictor
+
+logger = logging.getLogger(__name__)
+
+
+# ── PyTorch predictor (unchanged logic, just wrapped in the class) ───────────
 
 class HeartDiseasePredictor:
+    """PyTorch MLP predictor."""
+
     def __init__(self, model_path: str, preprocessor_path: str, device: str = "cpu"):
         self.device = torch.device(device)
         self.preprocessor = joblib.load(preprocessor_path)
-        
-        # Load Model
-        # We need to know input_dim to instantiate the architecture
-        # In a real scenario, this metadata should be saved with the model (e.g. in MLflow)
-        # For now, we infer it from the preprocessor or hardcode based on known feature count.
-        # The scaler + one-hot encoding expands features.
-        # Let's assume we load a dummy batch to check or load metadata.
-        # FIX: We will save the input_dim in the trainer as a simple file or attribute if possible.
-        # ideally we load it from mlflow config. 
-        # For this implementation, we will try to infer or use a reasonable default/argument.
-        # Let's assume the user passes the dimension or we try to run a transform to check.
-        
-        # HACK: To get the dimension, we can inspect the transformer. 
-        # But OneHotEncoder output depends on categories seen.
-        # We will assume the preprocessor is fitted.
-        # A robust way:
-        try:
-             # Try to get n_features_in_ or similar properties from the column transformer's transformers
-             pass
-        except:
-             pass
-             
-        # Alternative: We used 64 hidden dim in trainer, but input dim is dynamic.
-        # Let's just catch the exception on first forward pass or require explicit dim.
-        # BETTER APPROACH: Save metadata.json in trainer.
-        pass
 
     def load_model(self, model_path: str, input_dim: int, hidden_dim: int = 64):
         self.model = HeartDiseaseClassifier(input_dim=input_dim, hidden_dim=hidden_dim).to(self.device)
@@ -45,60 +43,71 @@ class HeartDiseasePredictor:
         self.model.eval()
 
     def predict(self, input_data: Dict[str, Any]) -> float:
-        """
-        Args:
-            input_data: Dict containing features like 'age', 'sex', etc.
-        Returns:
-            Probability of heart disease (0.0 to 1.0)
-        """
-        # Convert dict to DataFrame
         df = pd.DataFrame([input_data])
-        
-        # Preprocess
+
         X_processed = self.preprocessor.transform(df)
         if hasattr(X_processed, "toarray"):
             X_processed = X_processed.toarray()
-            
-        # Tensorize
+
         X_tensor = torch.tensor(X_processed, dtype=torch.float32).to(self.device)
-        
-        # Check if model is loaded; if not, we can't predict. 
-        # We assume load_model was called. 
-        # Note: We need input_dim to init model.
-        if not hasattr(self, 'model'):
-            # Lazy init if we didn't call load_model explicitly
-            input_dim = X_tensor.shape[1]
-            # Use default model path relative to preprocessor if not provided
-            # This is a bit magic, but simplifies API usage
-            pass 
-            
+
+        if not hasattr(self, "model"):
+            raise RuntimeError("Model not loaded — call load_model() first")
+
         with torch.no_grad():
             logits = self.model(X_tensor)
             prob = torch.sigmoid(logits).item()
-            
+
         return prob
 
-# Helper to easy load
-def get_predictor() -> HeartDiseasePredictor:
-    """Load artifacts from repo-root–anchored path (see `resolve_model_dir`)."""
+
+# ── Factory ──────────────────────────────────────────────────────────────────
+
+def _load_pytorch_predictor() -> HeartDiseasePredictor:
+    """Load the PyTorch MLP backend."""
     base = resolve_model_dir()
     preprocessor_path = base / "preprocessor.joblib"
     model_path = base / "best_model.pth"
-    
+
     device = "cuda" if torch.cuda.is_available() else "cpu"
     predictor = HeartDiseasePredictor(str(model_path), str(preprocessor_path), device=device)
-    
-    # Init model with dummy transform to get shape
-    # This is a safe way to determine input shape for the MLP
-    # We create a dummy DF with 0s to check shape
-    # But we need column names.
-    # We can inspect preprocessor to get feature names? 
-    # Or just use the model_state_dict to infer input layer weight shape.
-    
+
+    # Infer input_dim from saved state-dict
     state_dict = torch.load(model_path, map_location="cpu")
-    # layer_1.0.weight shape is (hidden, input)
     input_dim = state_dict["layer_1.0.weight"].shape[1]
-    
+
     predictor.load_model(str(model_path), input_dim)
-    
+    logger.info("Loaded PyTorch MLP predictor (input_dim=%d, device=%s)", input_dim, device)
     return predictor
+
+
+def _load_gb_predictor() -> GBHeartDiseasePredictor:
+    """Load the Gradient Boosting backend."""
+    base = resolve_model_dir()
+    model_path = base / "gb_model.joblib"
+    preprocessor_path = base / "gb_preprocessor.joblib"
+
+    predictor = GBHeartDiseasePredictor(str(model_path), str(preprocessor_path))
+    logger.info("Loaded Gradient Boosting predictor")
+    return predictor
+
+
+def get_predictor() -> Union[HeartDiseasePredictor, GBHeartDiseasePredictor]:
+    """
+    Return the predictor selected by ``MODEL_TYPE`` in the environment.
+
+    Supported values:
+        - ``"pytorch"``           (default) — PyTorch MLP
+        - ``"gradient_boosting"`` — sklearn GradientBoostingClassifier
+    """
+    model_type = get_settings().MODEL_TYPE.lower().strip()
+
+    if model_type == "gradient_boosting":
+        return _load_gb_predictor()
+    elif model_type == "pytorch":
+        return _load_pytorch_predictor()
+    else:
+        raise ValueError(
+            f"Unknown MODEL_TYPE={model_type!r}. "
+            f"Expected 'pytorch' or 'gradient_boosting'."
+        )

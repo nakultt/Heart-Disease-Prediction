@@ -32,6 +32,8 @@ class Settings(BaseSettings):
 
     # ML Settings (relative paths are resolved from repo root via `resolve_model_dir`)
     MODEL_DIR: str = "."
+    # Which model backend to serve: "pytorch" (default MLP) or "gradient_boosting"
+    MODEL_TYPE: str = "pytorch"
 
     # MongoDB — default local (no SRV/DNS). Override in .env for Atlas; prefer standard mongodb:// URI if SRV DNS fails.
     MONGODB_URL: str = "mongodb://127.0.0.1:27017"

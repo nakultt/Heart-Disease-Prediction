@@ -7,6 +7,7 @@ from src.heart_disease.api.v1.schemas import (
 from src.heart_disease.auth.dependencies import get_current_user_record
 from src.heart_disease.db import predictions_repo, users_repo
 from src.heart_disease.ml.predict import get_predictor, HeartDiseasePredictor
+from src.heart_disease.core.config import get_settings
 import logging
 
 router = APIRouter()
@@ -76,7 +77,7 @@ async def predict_heart_disease(
         heart_input = HeartDiseaseInput(**full_dict)
         data_dict = heart_input.model_dump()
 
-        logger.debug("Prediction request for authenticated user: %s", current_user)
+        logger.info("Running prediction using [%s] model for user: %s", get_settings().MODEL_TYPE.upper(), current_user)
         prob = predictor.predict(data_dict)
 
         prediction = 1 if prob > 0.5 else 0
