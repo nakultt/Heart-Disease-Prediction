@@ -17,6 +17,7 @@ import joblib
 import mlflow
 import numpy as np
 from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.utils.class_weight import compute_sample_weight
 from sklearn.metrics import (
     accuracy_score,
     classification_report,
@@ -34,12 +35,13 @@ logger = logging.getLogger(__name__)
 
 def train(
     data_path: str,
-    n_estimators: int = 200,
-    max_depth: int = 4,
-    learning_rate: float = 0.1,
+    n_estimators: int = 300,
+    max_depth: int = 3,
+    learning_rate: float = 0.05,
     subsample: float = 0.8,
     min_samples_split: int = 5,
     min_samples_leaf: int = 3,
+    imbalance_strategy: str = "sample_weight",
     experiment_name: str = "Heart Disease Prediction — Gradient Boosting",
 ):
     mlflow.set_experiment(experiment_name)
@@ -59,6 +61,8 @@ def train(
         X_val.shape[0],
         X_train.shape[1],
     )
+    logger.info("Train class distribution: %s", np.bincount(y_train.astype(int)).tolist())
+    logger.info("Val class distribution: %s", np.bincount(y_val.astype(int)).tolist())
 
     with mlflow.start_run():
         params = {
@@ -68,6 +72,7 @@ def train(
             "subsample": subsample,
             "min_samples_split": min_samples_split,
             "min_samples_leaf": min_samples_leaf,
+            "imbalance_strategy": imbalance_strategy,
         }
         mlflow.log_params(params)
 
@@ -83,7 +88,27 @@ def train(
         )
 
         logger.info("Training Gradient Boosting model …")
-        gb.fit(X_train, y_train)
+        X_fit = X_train
+        y_fit = y_train
+        sample_weight = None
+        if imbalance_strategy == "sample_weight":
+            sample_weight = compute_sample_weight(class_weight="balanced", y=y_train)
+            logger.info("Applying class-balanced sample weights during fit.")
+        elif imbalance_strategy == "smote":
+            try:
+                from imblearn.over_sampling import SMOTE
+            except ImportError as e:
+                raise RuntimeError(
+                    "SMOTE requested but imbalanced-learn is not installed. "
+                    "Run: pip install imbalanced-learn"
+                ) from e
+            sm = SMOTE(random_state=42)
+            X_fit, y_fit = sm.fit_resample(X_train, y_train)
+            logger.info("Applied SMOTE. Resampled distribution: %s", np.bincount(y_fit.astype(int)).tolist())
+        elif imbalance_strategy != "none":
+            raise ValueError("imbalance_strategy must be one of: sample_weight, smote, none")
+
+        gb.fit(X_fit, y_fit, sample_weight=sample_weight)
 
         # ── Evaluate ─────────────────────────────────────────────────────
         y_pred_train = gb.predict(X_train)
@@ -115,7 +140,7 @@ def train(
         logger.info("Val   Recall   : %.4f", val_recall)
         logger.info("Val   F1       : %.4f", val_f1)
         logger.info("Val   AUC      : %.4f", val_auc)
-        logger.info("\n%s", classification_report(y_val, y_pred_val))
+        logger.info("\nValidation classification report:\n%s", classification_report(y_val, y_pred_val))
 
         # ── Feature importance (top-10) ──────────────────────────────────
         importances = gb.feature_importances_
@@ -146,10 +171,16 @@ def train(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train Gradient Boosting model")
     parser.add_argument("--data_path", type=str, default="data/heart.csv")
-    parser.add_argument("--n_estimators", type=int, default=200)
-    parser.add_argument("--max_depth", type=int, default=4)
-    parser.add_argument("--learning_rate", type=float, default=0.1)
+    parser.add_argument("--n_estimators", type=int, default=300)
+    parser.add_argument("--max_depth", type=int, default=3)
+    parser.add_argument("--learning_rate", type=float, default=0.05)
     parser.add_argument("--subsample", type=float, default=0.8)
+    parser.add_argument(
+        "--imbalance_strategy",
+        type=str,
+        default="sample_weight",
+        choices=["sample_weight", "smote", "none"],
+    )
     args = parser.parse_args()
 
     train(
@@ -158,4 +189,5 @@ if __name__ == "__main__":
         max_depth=args.max_depth,
         learning_rate=args.learning_rate,
         subsample=args.subsample,
+        imbalance_strategy=args.imbalance_strategy,
     )
