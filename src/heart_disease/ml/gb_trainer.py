@@ -17,6 +17,7 @@ import joblib
 import mlflow
 import numpy as np
 from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.calibration import CalibratedClassifierCV
 from sklearn.metrics import (
     accuracy_score,
     classification_report,
@@ -85,10 +86,15 @@ def train(
         logger.info("Training Gradient Boosting model …")
         gb.fit(X_train, y_train)
 
+        # Calibrate the model for smoother probabilities
+        logger.info("Calibrating the model probabilities …")
+        calibrated_gb = CalibratedClassifierCV(estimator=gb, method="sigmoid", cv="prefit")
+        calibrated_gb.fit(X_val, y_val)
+
         # ── Evaluate ─────────────────────────────────────────────────────
-        y_pred_train = gb.predict(X_train)
-        y_pred_val = gb.predict(X_val)
-        y_prob_val = gb.predict_proba(X_val)[:, 1]
+        y_pred_train = calibrated_gb.predict(X_train)
+        y_pred_val = calibrated_gb.predict(X_val)
+        y_prob_val = calibrated_gb.predict_proba(X_val)[:, 1]
 
         train_acc = accuracy_score(y_train, y_pred_train)
         val_acc = accuracy_score(y_val, y_pred_val)
@@ -131,12 +137,12 @@ def train(
         model_path = root / "gb_model.joblib"
         preprocessor_path = root / "gb_preprocessor.joblib"
 
-        joblib.dump(gb, model_path)
+        joblib.dump(calibrated_gb, model_path)
         joblib.dump(preprocessor, preprocessor_path)
 
         mlflow.log_artifact(str(model_path))
         mlflow.log_artifact(str(preprocessor_path))
-        mlflow.sklearn.log_model(gb, "gb_model")
+        mlflow.sklearn.log_model(calibrated_gb, "gb_model")
 
         logger.info("Saved model      → %s", model_path)
         logger.info("Saved preprocessor → %s", preprocessor_path)
